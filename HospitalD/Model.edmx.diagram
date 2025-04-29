@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="826e0050dbd54ce4a6f3326aae3873e7" Name="Diagram1">
+        <EntityTypeShape EntityType="HospitalDRmModel.Department" Width="1.5" PointX="0.75" PointY="5.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Diagnosis" Width="1.5" PointX="3" PointY="5.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.MedicalProcedure" Width="1.5" PointX="5.25" PointY="9.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Medication" Width="1.5" PointX="3" PointY="8.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.PatientMedicalRecord" Width="1.5" PointX="5.25" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Patient" Width="1.5" PointX="3" PointY="11.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Position" Width="1.5" PointX="0.75" PointY="1.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Role" Width="1.5" PointX="0.75" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.Staff" Width="1.5" PointX="3" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.sysdiagram" Width="1.5" PointX="7.75" PointY="1.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="HospitalDRmModel.User" Width="1.5" PointX="3" PointY="15.625" IsExpanded="true" />
+        <AssociationConnector Association="HospitalDRmModel.FK__Diagnoses__ID_De__6225902D" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_De__7073AF84" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__Staff__ID_Depart__5A846E65" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_Di__6D9742D9" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__MedicalPr__ID_St__67DE6983" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_Pr__6E8B6712" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_Me__6F7F8B4B" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_Pa__6CA31EA0" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__PatientMe__ID_St__7167D3BD" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__Patients__ID_Rol__6501FCD8" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__Staff__ID_Positi__5B78929E" ManuallyRouted="false" />
+        <AssociationConnector Association="HospitalDRmModel.FK__Users__ID_Role__5F492382" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

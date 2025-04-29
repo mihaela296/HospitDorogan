@@ -1,0 +1,16 @@
+﻿<Page x:Class="HospitalD.AuthPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="AuthPage">
+    <Grid Style="{StaticResource PageBackground}">
+        <StackPanel Margin="20">
+            <TextBlock Text="Авторизация" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+            <TextBlock Text="Логин:"/>
+            <TextBox x:Name="usernameTextBox" Style="{StaticResource ModernTextBox}" Margin="0,5"/>
+            <TextBlock Text="Пароль:"/>
+            <PasswordBox x:Name="passwordBox" Style="{StaticResource ModernPasswordBox}" Margin="0,5"/>
+            <Button Content="Войти" Style="{StaticResource CustomButtonStyle}" Click="LoginButton_Click" Margin="0,10"/>
+            <Button Content="Зарегистрироваться" Style="{StaticResource TextButtonStyle}" Click="NavigateToReg_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>
