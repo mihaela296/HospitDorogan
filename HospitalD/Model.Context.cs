@@ -19,6 +19,7 @@ namespace HospitalD
             : base("name=Entities1")
         {
         }
+
         private static Entities1 _context;//приватная переменная
 
         public static Entities1 GetContext()

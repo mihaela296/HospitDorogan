@@ -40,13 +40,13 @@ namespace HospitalD
                 Page newWindow;
                 switch (user.ID_Role)
                 {
-                    case 1:
+                    case 1: // Администратор
                         newWindow = new AdminPage(user);
                         break;
-                    case 2:
+                    case 2: // Сотрудник
                         newWindow = new EmployeePage(user);
                         break;
-                    case 3:
+                    case 3: // Пациент
                         newWindow = new PatientPage(user);
                         break;
                     default:

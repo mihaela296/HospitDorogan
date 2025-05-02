@@ -28,9 +28,11 @@ namespace HospitalD
         public string Address { get; set; }
         public string Email { get; set; }
         public int ID_Role { get; set; }
+        public Nullable<int> ID_User { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PatientMedicalRecord> PatientMedicalRecords { get; set; }
         public virtual Role Role { get; set; }
+        public virtual User User { get; set; }
     }
 }

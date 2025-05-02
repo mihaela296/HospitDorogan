@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="Хранилище HospitalDRmModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="Хранилище HospitalDRmModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Departments">
           <Key>
             <PropertyRef Name="ID_Department" />
@@ -68,6 +68,7 @@
           <Property Name="Address" Type="nvarchar" MaxLength="255" />
           <Property Name="Email" Type="nvarchar" MaxLength="100" />
           <Property Name="ID_Role" Type="int" Nullable="false" />
+          <Property Name="ID_User" Type="int" />
         </EntityType>
         <EntityType Name="Positions">
           <Key>
@@ -258,6 +259,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Patients_Users">
+          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Patients" Type="Self.Patients" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="ID_User" />
+            </Principal>
+            <Dependent Role="Patients">
+              <PropertyRef Name="ID_User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <EntityContainer Name="Хранилище HospitalDRmModelContainer">
           <EntitySet Name="Departments" EntityType="Self.Departments" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Diagnoses" EntityType="Self.Diagnoses" Schema="dbo" store:Type="Tables" />
@@ -318,9 +331,12 @@
             <End Role="Roles" EntitySet="Roles" />
             <End Role="Users" EntitySet="Users" />
           </AssociationSet>
+          <AssociationSet Name="FK_Patients_Users" Association="Self.FK_Patients_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Patients" EntitySet="Patients" />
+          </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="HospitalDRmModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -403,6 +419,8 @@
           <Property Name="ID_Role" Type="Int32" Nullable="false" />
           <NavigationProperty Name="PatientMedicalRecords" Relationship="Self.FK__PatientMe__ID_Pa__6CA31EA0" FromRole="Patients" ToRole="PatientMedicalRecord" />
           <NavigationProperty Name="Role" Relationship="Self.FK__Patients__ID_Rol__6501FCD8" FromRole="Patients" ToRole="Roles" />
+          <Property Name="ID_User" Type="Int32" />
+          <NavigationProperty Name="User" Relationship="HospitalDRmModel.FK_Patients_Users" FromRole="Patient" ToRole="User" />
         </EntityType>
         <EntityType Name="Position">
           <Key>
@@ -456,6 +474,7 @@
           <Property Name="Password" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="ID_Role" Type="Int32" Nullable="false" />
           <NavigationProperty Name="Role" Relationship="Self.FK__Users__ID_Role__5F492382" FromRole="Users" ToRole="Roles" />
+          <NavigationProperty Name="Patients" Relationship="HospitalDRmModel.FK_Patients_Users" FromRole="User" ToRole="Patient" />
         </EntityType>
         <Association Name="FK__Diagnoses__ID_De__6225902D">
           <End Role="Departments" Type="Self.Department" Multiplicity="1" />
@@ -661,7 +680,23 @@
             <End Role="Roles" EntitySet="Roles" />
             <End Role="Users" EntitySet="Users" />
           </AssociationSet>
+          <AssociationSet Name="FK_Patients_Users" Association="HospitalDRmModel.FK_Patients_Users">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Patient" EntitySet="Patients" />
+          </AssociationSet>
         </EntityContainer>
+        <Association Name="FK_Patients_Users">
+          <End Type="HospitalDRmModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="HospitalDRmModel.Patient" Role="Patient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="ID_User" />
+            </Principal>
+            <Dependent Role="Patient">
+              <PropertyRef Name="ID_User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -727,6 +762,7 @@
           <EntitySetMapping Name="Patients">
             <EntityTypeMapping TypeName="HospitalDRmModel.Patient">
               <MappingFragment StoreEntitySet="Patients">
+                <ScalarProperty Name="ID_User" ColumnName="ID_User" />
                 <ScalarProperty Name="ID_Patient" ColumnName="ID_Patient" />
                 <ScalarProperty Name="FullName" ColumnName="FullName" />
                 <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />

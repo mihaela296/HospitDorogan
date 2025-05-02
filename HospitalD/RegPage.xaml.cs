@@ -15,6 +15,7 @@ namespace HospitalD
         {
             InitializeComponent();
         }
+
         private void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             if (usernameRegTextBox.Text.Length == 0)
@@ -25,11 +26,8 @@ namespace HospitalD
 
             using (var db = new Entities1())
             {
-                var existingUser = db.Users
-                    .AsNoTracking()
-                    .FirstOrDefault(u => u.Username == usernameRegTextBox.Text);
-
-                if (existingUser != null)
+                // Проверка существующего пользователя
+                if (db.Users.Any(u => u.Username == usernameRegTextBox.Text))
                 {
                     MessageBox.Show("Пользователь уже существует!");
                     return;
@@ -41,6 +39,7 @@ namespace HospitalD
                     return;
                 }
 
+                // Валидация пароля
                 bool hasLetter = false;
                 bool hasNumber = false;
                 foreach (char c in passwordRegBox.Password)
@@ -50,7 +49,6 @@ namespace HospitalD
                 }
 
                 var phoneRegex = new Regex(@"^\+7\d{10}$");
-
                 StringBuilder errors = new StringBuilder();
 
                 if (passwordRegBox.Password.Length < 6)
@@ -68,36 +66,39 @@ namespace HospitalD
                     return;
                 }
 
+                // Создаем пользователя
+                var newUser = new User
+                {
+                    Username = usernameRegTextBox.Text,
+                    Password = AuthPage.GetHash(passwordRegBox.Password),
+                    ID_Role = 3 // Роль пациента
+                };
+
+                db.Users.Add(newUser);
+                db.SaveChanges(); // Сохраняем, чтобы получить ID_User
+
+                // Создаем пациента
                 var newPatient = new Patient
                 {
                     FullName = fullNameTextBox.Text,
                     BirthDate = birthDatePicker.DisplayDate,
                     Phone = phoneNumberTextBox.Text,
                     Address = addressTextBox.Text,
-                    ID_Role = 3
+                    ID_Role = 3,
+                    ID_User = newUser.ID_User // Связываем с пользователем
                 };
 
                 db.Patients.Add(newPatient);
-                db.SaveChanges();
-
-                var newUser = new User
-                {
-                    Username = usernameRegTextBox.Text,
-                    Password = AuthPage.GetHash(passwordRegBox.Password),
-                    ID_Role = 3,
-                    ID_User = newPatient.ID_Patient
-                };
-
-                db.Users.Add(newUser);
                 db.SaveChanges();
 
                 MessageBox.Show("Регистрация успешна!");
                 NavigationService.Navigate(new AuthPage());
             }
         }
+
         private void NavigateToAuth_Click(object sender, RoutedEventArgs e)
         {
             NavigationService.GoBack();
-        }    
+        }
     }
- }
+}
