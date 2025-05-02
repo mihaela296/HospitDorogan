@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Entity;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,17 +21,32 @@ namespace HospitalD
 
         private void LoadMedicalRecords()
         {
-            var records = _db.PatientMedicalRecords
-                .Include(r => r.Diagnosis)
-                .Include(r => r.MedicalProcedure)
-                .Include(r => r.Medication)
-                .Include(r => r.Staff)
-                .Include(r => r.Department)
-                .Where(r => r.ID_Patient == _patient.ID_Patient)
-                .OrderByDescending(r => r.RecordDate)
-                .ToList();
+            try
+            {
+                _db.Configuration.LazyLoadingEnabled = false;
 
-            MedicalRecordsDataGrid.ItemsSource = records;
+                // Загружаем ВСЕ записи пациента (и приемы, и лечение)
+                var records = _db.PatientMedicalRecords
+                    .Include(r => r.Diagnosis)
+                    .Include(r => r.MedicalProcedure)
+                    .Include(r => r.Medication)
+                    .Include(r => r.Staff)
+                    .Include(r => r.Department)
+                    .Where(r => r.ID_Patient == _patient.ID_Patient)
+                    .OrderByDescending(r => r.RecordDate) // Сначала новые
+                    .ToList();
+
+                MedicalRecordsDataGrid.ItemsSource = records;
+
+                if (!records.Any())
+                {
+                    MessageBox.Show("Записи не найдены");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки данных: {ex.Message}");
+            }
         }
 
         private void ApplyFilter_Click(object sender, RoutedEventArgs e)

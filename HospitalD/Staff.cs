@@ -27,6 +27,7 @@ namespace HospitalD
         public int ID_Position { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
+        public Nullable<int> ID_User { get; set; }
     
         public virtual Department Department { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
@@ -34,5 +35,6 @@ namespace HospitalD
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PatientMedicalRecord> PatientMedicalRecords { get; set; }
         public virtual Position Position { get; set; }
+        public virtual User User { get; set; }
     }
 }

@@ -31,28 +31,22 @@
 
         <!-- Таблица данных -->
         <DataGrid Grid.Row="1" Name="AppointmentsDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Дата приема" Binding="{Binding VisitDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
-                <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
-                <DataGridTextColumn Header="Отделение" Binding="{Binding Departments.Name}" Width="*"/>
-                <DataGridTextColumn Header="Статус" Width="*">
-                    <DataGridTextColumn.Binding>
-                        <MultiBinding StringFormat="{}{0}">
-                            <Binding Path="VisitDate"/>
-                        </MultiBinding>
-                    </DataGridTextColumn.Binding>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Жалобы" Binding="{Binding Notes}" Width="*"/>
-                <DataGridTemplateColumn Width="Auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Name="ButtonCancel" Content="Отменить" Click="ButtonCancel_OnClick" 
-                                    HorizontalAlignment="Left" Width="80" Background="LightCoral"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+    <DataGrid.Columns>
+        <DataGridTextColumn Header="Дата приема" Binding="{Binding VisitDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="*"/>
+        <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
+        <DataGridTextColumn Header="Отделение" Binding="{Binding Staff.Department.Name, TargetNullValue='Не указано'}" Width="*"/>
+        <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
+        <DataGridTextColumn Header="Жалобы" Binding="{Binding Notes}" Width="*"/>
+        <DataGridTemplateColumn Width="Auto">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <Button Name="ButtonCancel" Content="Отменить" Click="ButtonCancel_OnClick" 
+                            HorizontalAlignment="Left" Width="80" Background="LightCoral"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+    </DataGrid.Columns>
+</DataGrid>
 
         <!-- Информация -->
         <TextBlock Grid.Row="2" Text="* Вы можете отменить только предстоящие записи" 

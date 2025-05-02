@@ -8,7 +8,15 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="EmployeePage">
 
-    <Grid Background="Blue">
-        <TextBlock Text="привет"/>
-    </Grid>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Style="{StaticResource StackPanelAdmin}">
+            <Button Content="Мед.карты" Style="{StaticResource MenuButtonStyle}" Click="MedicalRecords_Click"/>
+            <Button Content="Назначить лечение" Style="{StaticResource MenuButtonStyle}" Click="AssignTreatment_Click"/>
+            <Button Content="Расписание" Style="{StaticResource MenuButtonStyle}" Click="Schedule_Click"/>
+            <Button Content="Пациенты" Style="{StaticResource MenuButtonStyle}" Click="Patients_Click"/>
+            <Button Content="Выйти" Style="{StaticResource LogoutButtonStyle}" Click="Logout_Click"/>
+        </StackPanel>
+
+        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"/>
+    </DockPanel>
 </Page>

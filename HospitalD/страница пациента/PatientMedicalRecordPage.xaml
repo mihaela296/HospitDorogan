@@ -30,11 +30,11 @@
         <DataGrid Grid.Row="1" Name="MedicalRecordsDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Дата записи" Binding="{Binding RecordDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
-                <DataGridTextColumn Header="Диагноз" Binding="{Binding Diagnoses.Name}" Width="*"/>
-                <DataGridTextColumn Header="Процедура" Binding="{Binding MedicalProcedures.Name}" Width="*"/>
-                <DataGridTextColumn Header="Лекарство" Binding="{Binding Medications.Name}" Width="*"/>
+                <DataGridTextColumn Header="Диагноз" Binding="{Binding Diagnosis.Name, TargetNullValue='Не указан'}" Width="*"/>
+                <DataGridTextColumn Header="Процедура" Binding="{Binding MedicalProcedure.Name, TargetNullValue='Не указана'}" Width="*"/>
+                <DataGridTextColumn Header="Лекарство" Binding="{Binding Medication.Name, TargetNullValue='Не указано'}" Width="*"/>
                 <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
-                <DataGridTextColumn Header="Отделение" Binding="{Binding Departments.Name}" Width="*"/>
+                <DataGridTextColumn Header="Отделение" Binding="{Binding Department.Name, TargetNullValue='Не указано'}" Width="*"/>
                 <DataGridTextColumn Header="Примечания" Binding="{Binding Notes}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>

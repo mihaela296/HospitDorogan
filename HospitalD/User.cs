@@ -18,6 +18,7 @@ namespace HospitalD
         public User()
         {
             this.Patients = new HashSet<Patient>();
+            this.Staffs = new HashSet<Staff>();
         }
     
         public int ID_User { get; set; }
@@ -28,5 +29,7 @@ namespace HospitalD
         public virtual Role Role { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Patient> Patients { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Staff> Staffs { get; set; }
     }
 }

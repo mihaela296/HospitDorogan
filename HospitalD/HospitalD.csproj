@@ -218,16 +218,31 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AssignTreatmentPage.xaml.cs">
+      <DependentUpon>AssignTreatmentPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Department.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
     <Compile Include="Diagnosis.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
+    <Compile Include="EditMedicalRecordPage.xaml.cs">
+      <DependentUpon>EditMedicalRecordPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EmployeeMedicalRecordsPage.xaml.cs">
+      <DependentUpon>EmployeeMedicalRecordsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EmployeePage.xaml.cs">
       <DependentUpon>EmployeePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MakeAppointmentPage.xaml.cs">
+    <Compile Include="EmployeeSchedulePage.xaml.cs">
+      <DependentUpon>EmployeeSchedulePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PatientsListPage.xaml.cs">
+      <DependentUpon>PatientsListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="страница пациента\MakeAppointmentPage.xaml.cs">
       <DependentUpon>MakeAppointmentPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MedicalProcedure.cs">
@@ -254,16 +269,16 @@
     <Compile Include="Patient.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
-    <Compile Include="PatientAppointmentsPage.xaml.cs">
+    <Compile Include="страница пациента\PatientAppointmentsPage.xaml.cs">
       <DependentUpon>PatientAppointmentsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="PatientMedicalRecord.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
-    <Compile Include="PatientMedicalRecordPage.xaml.cs">
+    <Compile Include="страница пациента\PatientMedicalRecordPage.xaml.cs">
       <DependentUpon>PatientMedicalRecordPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PatientPage.xaml.cs">
+    <Compile Include="страница пациента\PatientPage.xaml.cs">
       <DependentUpon>PatientPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Position.cs">
@@ -335,23 +350,43 @@
     <Compile Include="Страницы админа\StaffPage.xaml.cs">
       <DependentUpon>StaffPage.xaml</DependentUpon>
     </Compile>
+    <Page Include="AssignTreatmentPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditMedicalRecordPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EmployeeMedicalRecordsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="EmployeePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MakeAppointmentPage.xaml">
+    <Page Include="EmployeeSchedulePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PatientAppointmentsPage.xaml">
+    <Page Include="PatientsListPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PatientMedicalRecordPage.xaml">
+    <Page Include="страница пациента\MakeAppointmentPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PatientPage.xaml">
+    <Page Include="страница пациента\PatientAppointmentsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="страница пациента\PatientMedicalRecordPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="страница пациента\PatientPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

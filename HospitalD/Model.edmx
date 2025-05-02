@@ -95,6 +95,7 @@
           <Property Name="ID_Position" Type="int" Nullable="false" />
           <Property Name="Phone" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="Email" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="ID_User" Type="int" />
         </EntityType>
         <EntityType Name="sysdiagrams">
           <Key>
@@ -271,6 +272,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Staff_Users">
+          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Staff" Type="Self.Staff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="ID_User" />
+            </Principal>
+            <Dependent Role="Staff">
+              <PropertyRef Name="ID_User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <EntityContainer Name="Хранилище HospitalDRmModelContainer">
           <EntitySet Name="Departments" EntityType="Self.Departments" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Diagnoses" EntityType="Self.Diagnoses" Schema="dbo" store:Type="Tables" />
@@ -334,6 +347,10 @@
           <AssociationSet Name="FK_Patients_Users" Association="Self.FK_Patients_Users">
             <End Role="Users" EntitySet="Users" />
             <End Role="Patients" EntitySet="Patients" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Staff_Users" Association="Self.FK_Staff_Users">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Staff" EntitySet="Staff" />
           </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
@@ -454,6 +471,8 @@
           <NavigationProperty Name="MedicalProcedures" Relationship="Self.FK__MedicalPr__ID_St__67DE6983" FromRole="Staff" ToRole="MedicalProcedures" />
           <NavigationProperty Name="PatientMedicalRecords" Relationship="Self.FK__PatientMe__ID_St__7167D3BD" FromRole="Staff" ToRole="PatientMedicalRecord" />
           <NavigationProperty Name="Position" Relationship="Self.FK__Staff__ID_Positi__5B78929E" FromRole="Staff" ToRole="Positions" />
+          <Property Name="ID_User" Type="Int32" />
+          <NavigationProperty Name="User" Relationship="HospitalDRmModel.FK_Staff_Users" FromRole="Staff" ToRole="User" />
         </EntityType>
         <EntityType Name="sysdiagram">
           <Key>
@@ -475,6 +494,7 @@
           <Property Name="ID_Role" Type="Int32" Nullable="false" />
           <NavigationProperty Name="Role" Relationship="Self.FK__Users__ID_Role__5F492382" FromRole="Users" ToRole="Roles" />
           <NavigationProperty Name="Patients" Relationship="HospitalDRmModel.FK_Patients_Users" FromRole="User" ToRole="Patient" />
+          <NavigationProperty Name="Staffs" Relationship="HospitalDRmModel.FK_Staff_Users" FromRole="User" ToRole="Staff" />
         </EntityType>
         <Association Name="FK__Diagnoses__ID_De__6225902D">
           <End Role="Departments" Type="Self.Department" Multiplicity="1" />
@@ -684,6 +704,10 @@
             <End Role="User" EntitySet="Users" />
             <End Role="Patient" EntitySet="Patients" />
           </AssociationSet>
+          <AssociationSet Name="FK_Staff_Users" Association="HospitalDRmModel.FK_Staff_Users">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Staff" EntitySet="Staffs" />
+          </AssociationSet>
         </EntityContainer>
         <Association Name="FK_Patients_Users">
           <End Type="HospitalDRmModel.User" Role="User" Multiplicity="0..1" />
@@ -693,6 +717,18 @@
               <PropertyRef Name="ID_User" />
             </Principal>
             <Dependent Role="Patient">
+              <PropertyRef Name="ID_User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Staff_Users">
+          <End Type="HospitalDRmModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="HospitalDRmModel.Staff" Role="Staff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="ID_User" />
+            </Principal>
+            <Dependent Role="Staff">
               <PropertyRef Name="ID_User" />
             </Dependent>
           </ReferentialConstraint>
@@ -794,6 +830,7 @@
           <EntitySetMapping Name="Staffs">
             <EntityTypeMapping TypeName="HospitalDRmModel.Staff">
               <MappingFragment StoreEntitySet="Staff">
+                <ScalarProperty Name="ID_User" ColumnName="ID_User" />
                 <ScalarProperty Name="ID_Staff" ColumnName="ID_Staff" />
                 <ScalarProperty Name="FullName" ColumnName="FullName" />
                 <ScalarProperty Name="ID_Department" ColumnName="ID_Department" />

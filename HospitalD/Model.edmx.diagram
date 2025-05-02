@@ -29,6 +29,7 @@
         <AssociationConnector Association="HospitalDRmModel.FK__Staff__ID_Positi__5B78929E" ManuallyRouted="false" />
         <AssociationConnector Association="HospitalDRmModel.FK__Users__ID_Role__5F492382" ManuallyRouted="false" />
         <AssociationConnector Association="HospitalDRmModel.FK_Patients_Users" />
+        <AssociationConnector Association="HospitalDRmModel.FK_Staff_Users" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

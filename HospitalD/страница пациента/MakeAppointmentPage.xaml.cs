@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Entity;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,21 +27,42 @@ namespace HospitalD
             AppointmentDatePicker.SelectedDate = DateTime.Today;
             TimeComboBox.SelectedIndex = 0;
         }
+        // Временный метод для проверки данных
+        private void CheckDoctorsData()
+        {
+            var allStaff = _db.Staffs
+                .Include(s => s.Position)
+                .Include(s => s.Department)
+                .ToList();
+
+            foreach (var staff in allStaff)
+            {
+                Console.WriteLine($"Сотрудник: {staff.FullName}");
+                Console.WriteLine($"Отделение: {staff.Department?.Name ?? "Нет"}");
+                Console.WriteLine($"Должность: {staff.Position?.Name ?? "Нет"}");
+                Console.WriteLine("----------------------------------");
+            }
+        }
 
         private void LoadDepartments()
         {
             try
             {
                 var departments = _db.Departments
-                    .Include(d => d.Staffs)  // Явно загружаем сотрудников
+                    .Include(d => d.Staffs.Select(s => s.Position))  // Загружаем сотрудников с их должностями
                     .OrderBy(d => d.Name)
                     .ToList();
 
-                // Для отладки - проверим сотрудников в каждом отделении
+                // Отладочный вывод (разделен на несколько строк для читаемости)
                 foreach (var dep in departments)
                 {
-                    Console.WriteLine($"Отделение: {dep.Name}");
-                    Console.WriteLine($"Количество сотрудников: {dep.Staffs?.Count ?? 0}");
+                    Console.WriteLine("Отделение: " + dep.Name);
+                    Console.WriteLine("Всего сотрудников: " + (dep.Staffs?.Count ?? 0));
+                    Console.WriteLine("Из них врачей: " +
+                        (dep.Staffs?.Count(s =>
+                            s.Position != null &&
+                            (s.Position.Name.ToLower().Contains("врач") ||
+                             s.Position.Name.ToLower().Contains("доктор"))) ?? 0));
                 }
 
                 DepartmentComboBox.ItemsSource = departments;
@@ -49,7 +71,8 @@ namespace HospitalD
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке отделений: {ex.Message}",
+                MessageBox.Show("Ошибка при загрузке отделений: " + ex.Message +
+                               "\n" + ex.InnerException?.Message,
                               "Ошибка",
                               MessageBoxButton.OK,
                               MessageBoxImage.Error);
@@ -62,38 +85,41 @@ namespace HospitalD
             {
                 try
                 {
-                    // Получаем всех сотрудников выбранного отделения
+                    // Получаем всех сотрудников отделения
                     var staffInDepartment = _db.Staffs
                         .Include(s => s.Position)
                         .Include(s => s.Department)
                         .Where(s => s.ID_Department == selectedDepartment.ID_Department)
                         .ToList();
 
-                    // Фильтруем только врачей (можно добавить другие критерии)
+                    // Фильтруем врачей
                     var doctors = staffInDepartment
-                        .Where(s => s.Position != null &&
-                                  (s.Position.Name.Contains("Врач") ||
-                                   s.Position.Name.Contains("Доктор") ||
-                                   s.Position.Name.Contains("Терапевт") ||
-                                   s.Position.Name.Contains("Педиатр") ||
-                                   s.Position.Name.Contains("Хирург")))
+                        .Where(s => s.Position != null && IsDoctorPosition(s.Position.Name))
                         .OrderBy(s => s.FullName)
                         .ToList();
+
+                    // Если не нашли по строгому фильтру, используем всех сотрудников без сообщения
+                    if (doctors.Count == 0)
+                    {
+                        doctors = staffInDepartment
+                            .OrderBy(s => s.FullName)
+                            .ToList();
+                    }
 
                     DoctorComboBox.ItemsSource = doctors;
                     DoctorComboBox.DisplayMemberPath = "FullName";
                     DoctorComboBox.SelectedValuePath = "ID_Staff";
 
-                    // Для отладки - выводим в консоль список врачей
-                    Console.WriteLine($"Врачи в отделении {selectedDepartment.Name}:");
+                    // Отладочный вывод (можно убрать в релизной версии)
+                    Debug.WriteLine($"Врачи в отделении {selectedDepartment.Name}:");
                     foreach (var doctor in doctors)
                     {
-                        Console.WriteLine($"{doctor.FullName} ({doctor.Position?.Name})");
+                        Debug.WriteLine($"{doctor.FullName} ({doctor.Position?.Name})");
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка при загрузке врачей: {ex.Message}",
+                    MessageBox.Show($"Ошибка загрузки врачей: {ex.Message}\n{ex.InnerException?.Message}",
                                   "Ошибка",
                                   MessageBoxButton.OK,
                                   MessageBoxImage.Error);
@@ -101,8 +127,33 @@ namespace HospitalD
             }
         }
 
+        // Вспомогательный метод для определения врачебных должностей
+        private bool IsDoctorPosition(string positionName)
+        {
+            if (string.IsNullOrWhiteSpace(positionName))
+                return false;
+
+            var lowerPosition = positionName.ToLower();
+            return lowerPosition.Contains("врач") ||
+                   lowerPosition.Contains("доктор") ||
+                   lowerPosition.Contains("терапевт") ||
+                   lowerPosition.Contains("хирург") ||
+                   lowerPosition.Contains("педиатр") ||
+                   lowerPosition.Contains("окулист") ||
+                   lowerPosition.Contains("стоматолог");
+        }
+
+
         private void MakeAppointment_Click(object sender, RoutedEventArgs e)
         {
+
+            // В MakeAppointmentPage в методе MakeAppointment_Click добавьте проверку:
+            var selectedDoctor = (Staff)DoctorComboBox.SelectedItem;
+            if (selectedDoctor.ID_Department != ((Department)DepartmentComboBox.SelectedItem).ID_Department)
+            {
+                MessageBox.Show("Внимание! Выбранный врач не работает в указанном отделении. " +
+                              "Запись может не отобразиться в расписании.");
+            }
             // 1. Проверка выбора врача
             if (DoctorComboBox.SelectedItem == null)
             {
