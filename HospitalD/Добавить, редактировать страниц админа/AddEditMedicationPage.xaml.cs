@@ -8,7 +8,10 @@ namespace HospitalD
 {
     public partial class AddEditMedicationPage : Page
     {
-        private Entities1 _db = new Entities1();
+        // Добавляем событие для уведомления об успешном сохранении
+        public event EventHandler MedicationSaved;
+
+        private readonly Entities1 _db = new Entities1();
         private Medication _currentMedication;
 
         public AddEditMedicationPage(Medication selectedMedication = null)
@@ -32,41 +35,31 @@ namespace HospitalD
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(NameTextBox.Text))
-            {
-                MessageBox.Show("Введите название лекарства!", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (!decimal.TryParse(DosageTextBox.Text, out decimal dosage) || dosage <= 0)
-            {
-                MessageBox.Show("Введите корректную дневную дозу (число > 0)!", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (!int.TryParse(DurationTextBox.Text, out int duration) || duration <= 0)
-            {
-                MessageBox.Show("Введите корректную продолжительность (целое число > 0)!", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            if (!ValidateInput()) return;
 
             try
             {
-                _currentMedication.Name = NameTextBox.Text;
-                _currentMedication.DailyDosage = (int)dosage;
-                _currentMedication.Duration = duration;
+                _currentMedication.Name = NameTextBox.Text.Trim();
+                _currentMedication.DailyDosage = int.Parse(DosageTextBox.Text);
+                _currentMedication.Duration = int.Parse(DurationTextBox.Text);
 
                 if (_currentMedication.ID_Medication == 0)
                 {
                     _db.Medications.Add(_currentMedication);
                 }
+                else
+                {
+                    _db.Entry(_currentMedication).State = EntityState.Modified;
+                }
 
                 _db.SaveChanges();
+
+                // Вызываем событие перед возвратом
+                MedicationSaved?.Invoke(this, EventArgs.Empty);
+
                 MessageBox.Show("Данные сохранены успешно!", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);
+
                 NavigationService.GoBack();
             }
             catch (Exception ex)
@@ -74,6 +67,32 @@ namespace HospitalD
                 MessageBox.Show($"Ошибка: {ex.InnerException?.Message ?? ex.Message}",
                     "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private bool ValidateInput()
+        {
+            if (string.IsNullOrWhiteSpace(NameTextBox.Text))
+            {
+                MessageBox.Show("Введите название лекарства!", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (!int.TryParse(DosageTextBox.Text, out int dosage) || dosage <= 0)
+            {
+                MessageBox.Show("Введите корректную дневную дозу (целое число > 0)!", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (!int.TryParse(DurationTextBox.Text, out int duration) || duration <= 0)
+            {
+                MessageBox.Show("Введите корректную продолжительность (целое число > 0)!", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            return true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)

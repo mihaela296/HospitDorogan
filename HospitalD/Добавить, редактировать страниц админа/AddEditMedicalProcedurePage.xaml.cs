@@ -8,19 +8,19 @@ namespace HospitalD
 {
     public partial class AddEditMedicalProcedurePage : Page
     {
+        // Добавляем событие для уведомления об успешном сохранении
+        public event EventHandler ProcedureSaved;
+
         private MedicalProcedure _currentProcedure;
-        private readonly Entities1 _db = new Entities1();
+        private readonly Entities1 _db;
 
         public AddEditMedicalProcedurePage(MedicalProcedure selectedProcedure = null)
         {
             InitializeComponent();
-
-            // Создаем новый экземпляр контекста для этой страницы
             _db = new Entities1();
 
             if (selectedProcedure != null)
             {
-                // Загружаем сущность заново в новом контексте
                 _currentProcedure = _db.MedicalProcedures.Find(selectedProcedure.ID_Procedure);
                 TitleTextBlock.Text = "Редактирование процедуры";
             }
@@ -40,7 +40,7 @@ namespace HospitalD
             {
                 NameTextBox.Text = _currentProcedure.Name;
                 StaffComboBox.SelectedValue = _currentProcedure.ID_Staff;
-                DurationTextBox.Text = _currentProcedure.Duration.ToString();
+                DurationTextBox.Text = _currentProcedure.Duration;
                 CostTextBox.Text = _currentProcedure.Cost.ToString();
             }
         }
@@ -53,15 +53,22 @@ namespace HospitalD
             {
                 _currentProcedure.Name = NameTextBox.Text.Trim();
                 _currentProcedure.ID_Staff = (int)StaffComboBox.SelectedValue;
-                _currentProcedure.Duration = DurationTextBox.Text; // Сохраняем как строку
+                _currentProcedure.Duration = DurationTextBox.Text;
                 _currentProcedure.Cost = decimal.Parse(CostTextBox.Text);
 
                 if (_currentProcedure.ID_Procedure == 0)
                 {
                     _db.MedicalProcedures.Add(_currentProcedure);
                 }
+                else
+                {
+                    _db.Entry(_currentProcedure).State = EntityState.Modified;
+                }
 
                 _db.SaveChanges();
+
+                // Вызываем событие перед возвратом
+                ProcedureSaved?.Invoke(this, EventArgs.Empty);
 
                 MessageBox.Show("Данные сохранены успешно!", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);
@@ -91,9 +98,9 @@ namespace HospitalD
                 return false;
             }
 
-            if (!int.TryParse(DurationTextBox.Text, out int duration) || duration <= 0)
+            if (string.IsNullOrWhiteSpace(DurationTextBox.Text))
             {
-                MessageBox.Show("Введите корректную продолжительность (целое число > 0)!", "Ошибка",
+                MessageBox.Show("Введите продолжительность!", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }

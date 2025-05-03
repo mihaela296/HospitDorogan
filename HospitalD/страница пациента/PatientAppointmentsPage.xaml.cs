@@ -19,6 +19,7 @@ namespace HospitalD
             StatusFilter.SelectedIndex = 0;
         }
 
+        // In PatientAppointmentsPage.xaml.cs - modify the LoadAppointments method
         private void LoadAppointments()
         {
             try
@@ -28,11 +29,11 @@ namespace HospitalD
                 var appointments = _db.PatientMedicalRecords
                     .Include(a => a.Staff.Department)
                     .Where(a => a.ID_Patient == _patient.ID_Patient)
-                    .AsEnumerable() // Переключаемся на LINQ to Objects
+                    .AsEnumerable()
                     .Select(a => new
                     {
                         Record = a,
-                        Status = a.VisitDate < DateTime.Now ? "Завершено" : "Запланировано"
+                        Status = a.DischargeDate != null ? "Завершено" : "Запланировано"
                     })
                     .OrderByDescending(x => x.Record.VisitDate)
                     .ToList();
@@ -63,16 +64,18 @@ namespace HospitalD
                     .Select(a => new
                     {
                         Record = a,
-                        Status = a.VisitDate < DateTime.Now ? "Завершено" : "Запланировано"
+                        Status = a.DischargeDate != null ? "Завершено" : "Запланировано"
                     });
 
                 switch (StatusFilter.SelectedIndex)
                 {
                     case 1: // Предстоящие
-                        appointments = appointments.Where(x => x.Record.VisitDate >= DateTime.Now);
+                        appointments = appointments.Where(x => x.Record.DischargeDate == null &&
+                                                           x.Record.VisitDate >= DateTime.Now);
                         break;
                     case 2: // Прошедшие
-                        appointments = appointments.Where(x => x.Record.VisitDate < DateTime.Now);
+                        appointments = appointments.Where(x => x.Record.DischargeDate != null ||
+                                                           x.Record.VisitDate < DateTime.Now);
                         break;
                 }
 
@@ -99,7 +102,6 @@ namespace HospitalD
             LoadAppointments();
         }
 
-
         private void ButtonCancel_OnClick(object sender, RoutedEventArgs e)
         {
             var selectedItem = AppointmentsDataGrid.SelectedItem;
@@ -109,14 +111,14 @@ namespace HospitalD
                 return;
             }
 
-            // Get the dynamic object's properties
+            // Получаем свойства динамического объекта
             dynamic dynamicItem = selectedItem;
             try
             {
                 DateTime visitDate = dynamicItem.VisitDate;
                 string notes = dynamicItem.Notes;
 
-                // Get the actual record from database using the visit date and notes
+                // Получаем фактическую запись из базы данных по дате визита и заметкам
                 var record = _db.PatientMedicalRecords
                     .FirstOrDefault(a => a.ID_Patient == _patient.ID_Patient
                                      && a.VisitDate == visitDate
@@ -134,7 +136,7 @@ namespace HospitalD
                     return;
                 }
 
-                if (MessageBox.Show($"Отменить запись на {record.VisitDate:dd.MM.yyyy HH:mm}?",
+                if (MessageBox.Show($"Отменить запись на {record.VisitDate:dd.MM.yyyy}?",
                     "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 {
                     return;
@@ -155,6 +157,39 @@ namespace HospitalD
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при получении данных записи: {ex.Message}");
+            }
+        }
+        private void ButtonDelCompleted_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Получаем все завершенные записи для текущего пациента
+                var completedAppointments = _db.PatientMedicalRecords
+                    .Where(a => a.ID_Patient == _patient.ID_Patient && a.VisitDate < DateTime.Now)
+                    .ToList();
+
+                if (completedAppointments.Count == 0)
+                {
+                    MessageBox.Show("Нет завершенных записей для удаления.");
+                    return;
+                }
+
+                // Подтверждение удаления
+                if (MessageBox.Show($"Удалить {completedAppointments.Count} завершенных записей?", "Подтверждение",
+                        MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+                {
+                    return;
+                }
+
+                // Удаление завершенных записей
+                _db.PatientMedicalRecords.RemoveRange(completedAppointments);
+                _db.SaveChanges();
+                LoadAppointments();
+                MessageBox.Show("Завершенные записи успешно удалены!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при удалении завершенных записей: {ex.Message}");
             }
         }
     }

@@ -3,23 +3,42 @@ using System.Data.Entity;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 
 namespace HospitalD
 {
     public partial class DiagnosesPage : Page
     {
         private readonly Entities1 _db = new Entities1();
+        private bool _shouldRefresh = false;
 
         public DiagnosesPage()
         {
             InitializeComponent();
             LoadDiagnoses();
             InitializeFirstLetterFilter();
+
+            // Подписываемся на событие NavigationService
+            this.Loaded += (s, e) =>
+            {
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigated += NavigationService_Navigated;
+                }
+            };
+        }
+
+        private void NavigationService_Navigated(object sender, NavigationEventArgs e)
+        {
+            if (e.Content == this && _shouldRefresh)
+            {
+                UpdateDiagnoses();
+                _shouldRefresh = false;
+            }
         }
 
         private void InitializeFirstLetterFilter()
         {
-            // Добавляем буквы А-Я в комбобокс
             FirstLetterFilter.Items.Add(new ComboBoxItem() { Content = "Все" });
             for (char c = 'А'; c <= 'Я'; c++)
             {
@@ -30,57 +49,51 @@ namespace HospitalD
 
         private void LoadDiagnoses()
         {
-            try
-            {
-                // Явно загружаем связанные данные отделений
-                var diagnoses = _db.Diagnoses
-                    .Include(d => d.Department)  // Используем правильное название навигационного свойства
-                    .AsNoTracking()
-                    .ToList();
-
-                DiagnosesDataGrid.ItemsSource = diagnoses;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при загрузке данных: {ex.Message}", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            UpdateDiagnoses();
         }
 
         private void UpdateDiagnoses()
         {
-            var currentDiagnoses = _db.Diagnoses
-                .Include(d => d.Department)
-                .AsNoTracking()
-                .ToList();
-
-            // Фильтрация по первой букве
-            if (FirstLetterFilter.SelectedIndex > 0 &&
-                FirstLetterFilter.SelectedItem is ComboBoxItem selectedLetterItem)
+            try
             {
-                string letter = selectedLetterItem.Content.ToString();
-                currentDiagnoses = currentDiagnoses.Where(d =>
-                    d.Name.StartsWith(letter, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
+                var currentDiagnoses = _db.Diagnoses
+                    .Include(d => d.Department)
+                    .AsNoTracking()
+                    .ToList();
 
-            // Фильтрация по названию
-            if (!string.IsNullOrWhiteSpace(SearchDiagnosisName.Text))
+                // Фильтрация по первой букве
+                if (FirstLetterFilter.SelectedIndex > 0 &&
+                    FirstLetterFilter.SelectedItem is ComboBoxItem selectedLetterItem)
+                {
+                    string letter = selectedLetterItem.Content.ToString();
+                    currentDiagnoses = currentDiagnoses.Where(d =>
+                        d.Name.StartsWith(letter, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                // Фильтрация по названию
+                if (!string.IsNullOrWhiteSpace(SearchDiagnosisName.Text))
+                {
+                    currentDiagnoses = currentDiagnoses.Where(x =>
+                        x.Name.ToLower().Contains(SearchDiagnosisName.Text.ToLower())).ToList();
+                }
+
+                // Сортировка
+                switch (SortDiagnosisComboBox.SelectedIndex)
+                {
+                    case 0: currentDiagnoses = currentDiagnoses.OrderBy(d => d.ID_Diagnosis).ToList(); break;
+                    case 1: currentDiagnoses = currentDiagnoses.OrderBy(d => d.Name).ToList(); break;
+                    case 2: currentDiagnoses = currentDiagnoses.OrderByDescending(d => d.Name).ToList(); break;
+                    case 3: currentDiagnoses = currentDiagnoses.OrderBy(d => d.Department.Name).ToList(); break;
+                    case 4: currentDiagnoses = currentDiagnoses.OrderByDescending(d => d.Department.Name).ToList(); break;
+                }
+
+                DiagnosesDataGrid.ItemsSource = currentDiagnoses;
+            }
+            catch (Exception ex)
             {
-                currentDiagnoses = currentDiagnoses.Where(x =>
-                    x.Name.ToLower().Contains(SearchDiagnosisName.Text.ToLower())).ToList();
+                MessageBox.Show($"Ошибка при обновлении данных: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Сортировка
-            switch (SortDiagnosisComboBox.SelectedIndex)
-            {
-                case 0: currentDiagnoses = currentDiagnoses.OrderBy(d => d.ID_Diagnosis).ToList(); break;
-                case 1: currentDiagnoses = currentDiagnoses.OrderBy(d => d.Name).ToList(); break;
-                case 2: currentDiagnoses = currentDiagnoses.OrderByDescending(d => d.Name).ToList(); break;
-                case 3: currentDiagnoses = currentDiagnoses.OrderBy(d => d.Department.Name).ToList(); break;
-                case 4: currentDiagnoses = currentDiagnoses.OrderByDescending(d => d.Department.Name).ToList(); break;
-            }
-
-            DiagnosesDataGrid.ItemsSource = currentDiagnoses;
         }
 
         private void FirstLetterFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -110,7 +123,10 @@ namespace HospitalD
         {
             if (DiagnosesDataGrid.SelectedItem is Diagnosis selectedDiagnosis)
             {
-                NavigationService.Navigate(new AddEditDiagnosesPage(selectedDiagnosis));
+                _shouldRefresh = true;
+                var editPage = new AddEditDiagnosesPage(selectedDiagnosis);
+                editPage.DiagnosisSaved += (s, args) => _shouldRefresh = true;
+                NavigationService.Navigate(editPage);
             }
             else
             {
@@ -121,7 +137,10 @@ namespace HospitalD
 
         private void ButtonAdd_OnClick(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new AddEditDiagnosesPage());
+            _shouldRefresh = true;
+            var addPage = new AddEditDiagnosesPage();
+            addPage.DiagnosisSaved += (s, args) => _shouldRefresh = true;
+            NavigationService.Navigate(addPage);
         }
 
         private void ButtonDel_OnClick(object sender, RoutedEventArgs e)
@@ -141,11 +160,12 @@ namespace HospitalD
 
             try
             {
+                _db.Diagnoses.Attach(selectedDiagnosis);
                 _db.Diagnoses.Remove(selectedDiagnosis);
                 _db.SaveChanges();
                 UpdateDiagnoses();
-                MessageBox.Show("Диагноз успешно удален!",
-                    "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Диагноз успешно удален!", "Успех",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -156,7 +176,7 @@ namespace HospitalD
 
         private void DiagnosesDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            // Дополнительная логика при изменении выбора, если необходимо
         }
     }
 }

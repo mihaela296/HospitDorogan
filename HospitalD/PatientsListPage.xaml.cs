@@ -49,13 +49,23 @@ namespace HospitalD
         {
             if (PatientsDataGrid.SelectedItem is Patient patient)
             {
-                if (_mainFrame != null)
+                // Создаем новую страницу с медицинской картой
+                var medicalRecordPage = new PatientMedicalRecordPage(patient);
+
+                // Проверяем, есть ли родительский фрейм
+                var frame = Parent as Frame ?? _mainFrame;
+
+                if (frame != null)
                 {
-                    _mainFrame.Navigate(new EmployeeMedicalRecordsPage(null, patient, _mainFrame));
+                    frame.Navigate(medicalRecordPage);
+                }
+                else if (NavigationService != null)
+                {
+                    NavigationService.Navigate(medicalRecordPage);
                 }
                 else
                 {
-                    NavigationService?.Navigate(new EmployeeMedicalRecordsPage(null, patient));
+                    MessageBox.Show("Не удалось открыть медицинскую карту");
                 }
             }
         }

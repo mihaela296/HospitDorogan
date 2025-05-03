@@ -10,6 +10,9 @@ namespace HospitalD
 {
     public partial class AddEditPatientPage : Page
     {
+        // Добавляем событие для уведомления об успешном сохранении
+        public event EventHandler PatientSaved;
+
         private Patient _currentPatient;
         private readonly Entities1 _context = new Entities1();
 
@@ -47,6 +50,10 @@ namespace HospitalD
                 }
 
                 _context.SaveChanges();
+
+                // Вызываем событие перед возвратом
+                PatientSaved?.Invoke(this, EventArgs.Empty);
+
                 ShowSuccessMessage();
                 NavigationService.GoBack();
             }
@@ -99,28 +106,10 @@ namespace HospitalD
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private string GenerateTempPassword()
-        {
-            const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 8)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-
-        private string GetHash(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
-            }
-        }
-
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             _context.Dispose();
             NavigationService.GoBack();
         }
-
     }
 }

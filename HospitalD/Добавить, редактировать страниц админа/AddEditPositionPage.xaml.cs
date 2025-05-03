@@ -8,19 +8,19 @@ namespace HospitalD
 {
     public partial class AddEditPositionPage : Page
     {
+        // Добавляем событие для уведомления об успешном сохранении
+        public event EventHandler PositionSaved;
+
         private Position _currentPosition;
-        private Entities1 _db;
+        private readonly Entities1 _db;
 
         public AddEditPositionPage(Position selectedPosition = null)
         {
             InitializeComponent();
-
-            // Создаем новый контекст для каждой страницы редактирования
             _db = new Entities1();
 
             if (selectedPosition != null && selectedPosition.ID_Position != 0)
             {
-                // Загружаем должность из БД с новым контекстом
                 _currentPosition = _db.Positions.Find(selectedPosition.ID_Position);
                 TitleTextBlock.Text = "Редактирование должности";
             }
@@ -57,11 +57,13 @@ namespace HospitalD
                 }
                 else
                 {
-                    // Помечаем сущность как измененную
                     _db.Entry(_currentPosition).State = EntityState.Modified;
                 }
 
                 _db.SaveChanges();
+
+                // Вызываем событие перед возвратом
+                PositionSaved?.Invoke(this, EventArgs.Empty);
 
                 MessageBox.Show("Данные сохранены успешно!", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);

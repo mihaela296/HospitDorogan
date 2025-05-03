@@ -10,12 +10,32 @@ namespace HospitalD
     public partial class MedicationsPage : Page
     {
         private readonly Entities1 _db = new Entities1();
+        private bool _shouldRefresh = false;
 
         public MedicationsPage()
         {
             InitializeComponent();
             LoadMedications();
             InitializeDosageFilter();
+
+            // Подписываемся на событие NavigationService
+            this.Loaded += (s, e) =>
+            {
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigated += NavigationService_Navigated;
+                }
+            };
+        }
+
+        private void NavigationService_Navigated(object sender, NavigationEventArgs e)
+        {
+            // Обновляем данные только если вернулись на эту страницу
+            if (e.Content == this && _shouldRefresh)
+            {
+                UpdateMedications();
+                _shouldRefresh = false;
+            }
         }
 
         private void InitializeDosageFilter()
@@ -44,39 +64,49 @@ namespace HospitalD
 
         private void UpdateMedications()
         {
-            var currentMedications = _db.Medications.AsQueryable();
-
-            // Фильтрация по количеству в день
-            if (DosageFilter.SelectedIndex > 0 &&
-                DosageFilter.SelectedItem is ComboBoxItem selectedDosageItem)
+            try
             {
-                string dosageStr = selectedDosageItem.Content.ToString();
-                if (int.TryParse(dosageStr, out int selectedDosage))
+                var currentMedications = _db.Medications
+                    .AsNoTracking()
+                    .AsQueryable();
+
+                // Фильтрация по количеству в день
+                if (DosageFilter.SelectedIndex > 0 &&
+                    DosageFilter.SelectedItem is ComboBoxItem selectedDosageItem)
                 {
-                    currentMedications = currentMedications.Where(m => m.DailyDosage == selectedDosage);
+                    string dosageStr = selectedDosageItem.Content.ToString();
+                    if (int.TryParse(dosageStr, out int selectedDosage))
+                    {
+                        currentMedications = currentMedications.Where(m => m.DailyDosage == selectedDosage);
+                    }
                 }
-            }
 
-            // Фильтрация по названию
-            if (!string.IsNullOrWhiteSpace(SearchMedicationName.Text))
+                // Фильтрация по названию
+                if (!string.IsNullOrWhiteSpace(SearchMedicationName.Text))
+                {
+                    currentMedications = currentMedications.Where(m =>
+                        m.Name.ToLower().Contains(SearchMedicationName.Text.ToLower()));
+                }
+
+                // Сортировка
+                switch (SortMedicationComboBox.SelectedIndex)
+                {
+                    case 0: currentMedications = currentMedications.OrderBy(m => m.Name); break;
+                    case 1: currentMedications = currentMedications.OrderBy(m => m.Name); break;
+                    case 2: currentMedications = currentMedications.OrderByDescending(m => m.Name); break;
+                    case 3: currentMedications = currentMedications.OrderBy(m => m.DailyDosage); break;
+                    case 4: currentMedications = currentMedications.OrderByDescending(m => m.DailyDosage); break;
+                    case 5: currentMedications = currentMedications.OrderBy(m => m.Duration); break;
+                    case 6: currentMedications = currentMedications.OrderByDescending(m => m.Duration); break;
+                }
+
+                MedicationsDataGrid.ItemsSource = currentMedications.ToList();
+            }
+            catch (Exception ex)
             {
-                currentMedications = currentMedications.Where(m =>
-                    m.Name.ToLower().Contains(SearchMedicationName.Text.ToLower()));
+                MessageBox.Show($"Ошибка при обновлении данных: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Сортировка
-            switch (SortMedicationComboBox.SelectedIndex)
-            {
-                case 0: currentMedications = currentMedications.OrderBy(m => m.Name); break;
-                case 1: currentMedications = currentMedications.OrderBy(m => m.Name); break;
-                case 2: currentMedications = currentMedications.OrderByDescending(m => m.Name); break;
-                case 3: currentMedications = currentMedications.OrderBy(m => m.DailyDosage); break;
-                case 4: currentMedications = currentMedications.OrderByDescending(m => m.DailyDosage); break;
-                case 5: currentMedications = currentMedications.OrderBy(m => m.Duration); break;
-                case 6: currentMedications = currentMedications.OrderByDescending(m => m.Duration); break;
-            }
-
-            MedicationsDataGrid.ItemsSource = currentMedications.ToList();
         }
 
         private void DosageFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -106,7 +136,10 @@ namespace HospitalD
         {
             if (MedicationsDataGrid.SelectedItem is Medication selectedMedication)
             {
-                NavigationService.Navigate(new AddEditMedicationPage(selectedMedication));
+                _shouldRefresh = true;
+                var editPage = new AddEditMedicationPage(selectedMedication);
+                editPage.MedicationSaved += (s, args) => _shouldRefresh = true;
+                NavigationService.Navigate(editPage);
             }
             else
             {
@@ -117,7 +150,10 @@ namespace HospitalD
 
         private void ButtonAdd_OnClick(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new AddEditMedicationPage());
+            _shouldRefresh = true;
+            var addPage = new AddEditMedicationPage();
+            addPage.MedicationSaved += (s, args) => _shouldRefresh = true;
+            NavigationService.Navigate(addPage);
         }
 
         private void ButtonDel_OnClick(object sender, RoutedEventArgs e)
@@ -137,21 +173,12 @@ namespace HospitalD
 
             try
             {
-                if (_db.Entry(selectedMedication).State == EntityState.Detached)
-                {
-                    _db.Medications.Attach(selectedMedication);
-                }
-
+                _db.Medications.Attach(selectedMedication);
                 _db.Medications.Remove(selectedMedication);
                 _db.SaveChanges();
                 UpdateMedications();
                 MessageBox.Show("Лекарство успешно удалено!",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (System.Data.Entity.Infrastructure.DbUpdateException)
-            {
-                MessageBox.Show("Невозможно удалить лекарство, так как оно связано с другими записями в базе данных.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

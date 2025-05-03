@@ -19,6 +19,8 @@ namespace HospitalD
             LoadMedicalRecords();
         }
 
+
+
         private void LoadMedicalRecords()
         {
             try
@@ -72,6 +74,38 @@ namespace HospitalD
             MedicalRecordsDataGrid.ItemsSource = records
                 .OrderByDescending(r => r.RecordDate)
                 .ToList();
+        }
+
+
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Проверяем, есть ли родительский фрейм (для случая, когда страница открыта в Frame)
+            var frame = Parent as Frame;
+            if (frame != null && frame.CanGoBack)
+            {
+                frame.GoBack();
+            }
+            else
+            {
+                // Если нет истории навигации, создаем новую страницу со списком пациентов
+                var patientsPage = new PatientsListPage();
+
+                // Проверяем, есть ли NavigationService
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigate(patientsPage);
+                }
+                else if (frame != null)
+                {
+                    frame.Navigate(patientsPage);
+                }
+                else
+                {
+                    // Если нет возможности навигации, просто показываем сообщение
+                    MessageBox.Show("Не удалось вернуться к списку пациентов");
+                }
+            }
         }
 
         private void ResetFilter_Click(object sender, RoutedEventArgs e)

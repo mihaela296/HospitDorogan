@@ -31,25 +31,31 @@
 
         <!-- Таблица данных -->
         <DataGrid Grid.Row="1" Name="AppointmentsDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
-    <DataGrid.Columns>
-        <DataGridTextColumn Header="Дата приема" Binding="{Binding VisitDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="*"/>
-        <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
-        <DataGridTextColumn Header="Отделение" Binding="{Binding Staff.Department.Name, TargetNullValue='Не указано'}" Width="*"/>
-        <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
-        <DataGridTextColumn Header="Жалобы" Binding="{Binding Notes}" Width="*"/>
-        <DataGridTemplateColumn Width="Auto">
-            <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                    <Button Name="ButtonCancel" Content="Отменить" Click="ButtonCancel_OnClick" 
-                            HorizontalAlignment="Left" Width="80" Background="LightCoral"/>
-                </DataTemplate>
-            </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-    </DataGrid.Columns>
-</DataGrid>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Дата приема" Binding="{Binding VisitDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
+                <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
+                <DataGridTextColumn Header="Отделение" Binding="{Binding Staff.Department.Name, TargetNullValue='Не указано'}" Width="*"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="*"/>
+                <DataGridTextColumn Header="Жалобы" Binding="{Binding Notes}" Width="*"/>
+                <DataGridTemplateColumn Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Name="ButtonCancel" Content="Отменить" Click="ButtonCancel_OnClick" 
+                                    HorizontalAlignment="Left" Width="80" Background="LightCoral"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
 
         <!-- Информация -->
         <TextBlock Grid.Row="2" Text="* Вы можете отменить только предстоящие записи" 
                    FontStyle="Italic" HorizontalAlignment="Center" Margin="0,10"/>
+
+        <!-- Кнопка удаления завершенных записей (размещаем внизу справа) -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10">
+            <Button Name="ButtonDelCompleted" Content="Удалить завершенные" Click="ButtonDelCompleted_Click" 
+                    Width="150" Background="Aqua"/>
+        </StackPanel>
     </Grid>
 </Page>

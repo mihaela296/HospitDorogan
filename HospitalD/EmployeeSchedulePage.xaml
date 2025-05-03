@@ -32,7 +32,6 @@
         <DataGrid Grid.Row="1" Name="ScheduleDataGrid" AutoGenerateColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Дата" Binding="{Binding VisitDate, StringFormat={}{0:dd.MM.yyyy}}" Width="*"/>
-                <DataGridTextColumn Header="Время" Binding="{Binding VisitDate, StringFormat={}{0:HH:mm}}" Width="*"/>
                 <DataGridTextColumn Header="Пациент" Binding="{Binding Patient.FullName}" Width="*"/>
                 <DataGridTextColumn Header="Врач" Binding="{Binding Staff.FullName}" Width="*"/>
                 <DataGridTextColumn Header="Диагноз" Binding="{Binding Diagnosis.Name, TargetNullValue='Не указан'}" Width="*"/>
@@ -42,7 +41,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="Завершить" Click="CompleteAppointmentButton_Click" 
-                                    HorizontalAlignment="Left" Width="80" Background="LightGreen"/>
+                            HorizontalAlignment="Left" Width="80" Background="LightGreen"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

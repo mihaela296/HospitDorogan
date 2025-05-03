@@ -10,12 +10,33 @@ namespace HospitalD
     public partial class PatientsPage : Page
     {
         private readonly Entities1 _db = new Entities1();
+        private bool _shouldRefresh = false;
 
         public PatientsPage()
         {
             InitializeComponent();
             LoadPatients();
             InitializeBirthYearFilter();
+
+            // Подписываемся на событие NavigationService
+            this.Loaded += (s, e) =>
+            {
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigated += NavigationService_Navigated;
+                }
+            };
+        }
+
+        private void NavigationService_Navigated(object sender, NavigationEventArgs e)
+        {
+            // Обновляем данные только если вернулись на эту страницу
+            if (e.Content == this && _shouldRefresh)
+            {
+                UpdatePatients();
+                InitializeBirthYearFilter(); // Обновляем фильтр годов
+                _shouldRefresh = false;
+            }
         }
 
         private void InitializeBirthYearFilter()
@@ -24,8 +45,8 @@ namespace HospitalD
             BirthYearFilter.Items.Add(new ComboBoxItem() { Content = "Все года" });
 
             var birthYears = _db.Patients
-                .Where(p => p.BirthDate.HasValue) // Фильтруем только тех, у кого есть дата рождения
-                .Select(p => p.BirthDate.Value.Year) // Берем Year только после проверки на null
+                .Where(p => p.BirthDate.HasValue)
+                .Select(p => p.BirthDate.Value.Year)
                 .Distinct()
                 .OrderByDescending(y => y)
                 .ToList();
@@ -45,37 +66,45 @@ namespace HospitalD
 
         private void UpdatePatients()
         {
-            var currentPatients = _db.Patients.AsQueryable();
-
-            // Фильтрация по году рождения
-            if (BirthYearFilter.SelectedIndex > 0 &&
-                BirthYearFilter.SelectedItem is ComboBoxItem selectedYearItem)
+            try
             {
-                if (int.TryParse(selectedYearItem.Content.ToString(), out int selectedYear))
+                var currentPatients = _db.Patients.AsNoTracking().AsQueryable();
+
+                // Фильтрация по году рождения
+                if (BirthYearFilter.SelectedIndex > 0 &&
+                    BirthYearFilter.SelectedItem is ComboBoxItem selectedYearItem)
                 {
-                    currentPatients = currentPatients
-                        .Where(p => p.BirthDate.HasValue && p.BirthDate.Value.Year == selectedYear);
+                    if (int.TryParse(selectedYearItem.Content.ToString(), out int selectedYear))
+                    {
+                        currentPatients = currentPatients
+                            .Where(p => p.BirthDate.HasValue && p.BirthDate.Value.Year == selectedYear);
+                    }
                 }
-            }
 
-            // Фильтрация по ФИО
-            if (!string.IsNullOrWhiteSpace(SearchPatientName.Text))
+                // Фильтрация по ФИО
+                if (!string.IsNullOrWhiteSpace(SearchPatientName.Text))
+                {
+                    currentPatients = currentPatients.Where(p =>
+                        p.FullName.ToLower().Contains(SearchPatientName.Text.ToLower()));
+                }
+
+                // Сортировка
+                switch (SortPatientComboBox.SelectedIndex)
+                {
+                    case 0: currentPatients = currentPatients.OrderBy(p => p.FullName); break;
+                    case 1: currentPatients = currentPatients.OrderBy(p => p.FullName); break;
+                    case 2: currentPatients = currentPatients.OrderByDescending(p => p.FullName); break;
+                    case 3: currentPatients = currentPatients.OrderBy(p => p.BirthDate); break;
+                    case 4: currentPatients = currentPatients.OrderByDescending(p => p.BirthDate); break;
+                }
+
+                PatientsDataGrid.ItemsSource = currentPatients.ToList();
+            }
+            catch (Exception ex)
             {
-                currentPatients = currentPatients.Where(p =>
-                    p.FullName.ToLower().Contains(SearchPatientName.Text.ToLower()));
+                MessageBox.Show($"Ошибка при обновлении данных: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Сортировка
-            switch (SortPatientComboBox.SelectedIndex)
-            {
-                case 0: currentPatients = currentPatients.OrderBy(p => p.FullName); break;
-                case 1: currentPatients = currentPatients.OrderBy(p => p.FullName); break;
-                case 2: currentPatients = currentPatients.OrderByDescending(p => p.FullName); break;
-                case 3: currentPatients = currentPatients.OrderBy(p => p.BirthDate); break;
-                case 4: currentPatients = currentPatients.OrderByDescending(p => p.BirthDate); break;
-            }
-
-            PatientsDataGrid.ItemsSource = currentPatients.ToList();
         }
 
         private void BirthYearFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -105,7 +134,10 @@ namespace HospitalD
         {
             if (PatientsDataGrid.SelectedItem is Patient selectedPatient)
             {
-                NavigationService.Navigate(new AddEditPatientPage(selectedPatient));
+                _shouldRefresh = true;
+                var editPage = new AddEditPatientPage(selectedPatient);
+                editPage.PatientSaved += (s, args) => _shouldRefresh = true;
+                NavigationService.Navigate(editPage);
             }
             else
             {
@@ -116,7 +148,10 @@ namespace HospitalD
 
         private void ButtonAdd_OnClick(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new AddEditPatientPage(null));
+            _shouldRefresh = true;
+            var addPage = new AddEditPatientPage();
+            addPage.PatientSaved += (s, args) => _shouldRefresh = true;
+            NavigationService.Navigate(addPage);
         }
 
         private void ButtonDel_OnClick(object sender, RoutedEventArgs e)
@@ -136,22 +171,13 @@ namespace HospitalD
 
             try
             {
-                if (_db.Entry(selectedPatient).State == EntityState.Detached)
-                {
-                    _db.Patients.Attach(selectedPatient);
-                }
-
+                _db.Patients.Attach(selectedPatient);
                 _db.Patients.Remove(selectedPatient);
                 _db.SaveChanges();
                 UpdatePatients();
                 InitializeBirthYearFilter(); // Обновляем список годов после удаления
                 MessageBox.Show("Пациент успешно удален!",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (System.Data.Entity.Infrastructure.DbUpdateException)
-            {
-                MessageBox.Show("Невозможно удалить пациента, так как он связан с другими записями в базе данных.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

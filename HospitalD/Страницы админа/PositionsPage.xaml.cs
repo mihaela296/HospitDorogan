@@ -10,11 +10,31 @@ namespace HospitalD
     public partial class PositionsPage : Page
     {
         private readonly Entities1 _db = new Entities1();
+        private bool _shouldRefresh = false;
 
         public PositionsPage()
         {
             InitializeComponent();
             LoadPositions();
+
+            // Подписываемся на событие NavigationService
+            this.Loaded += (s, e) =>
+            {
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigated += NavigationService_Navigated;
+                }
+            };
+        }
+
+        private void NavigationService_Navigated(object sender, NavigationEventArgs e)
+        {
+            // Обновляем данные только если вернулись на эту страницу
+            if (e.Content == this && _shouldRefresh)
+            {
+                UpdatePositions();
+                _shouldRefresh = false;
+            }
         }
 
         private void LoadPositions()
@@ -24,38 +44,46 @@ namespace HospitalD
 
         private void UpdatePositions()
         {
-            var currentPositions = _db.Positions.AsNoTracking().AsQueryable();
-
-            // Фильтрация по зарплате
-            if (SalaryFilter.SelectedIndex > 0)
+            try
             {
-                switch (SalaryFilter.SelectedIndex)
+                var currentPositions = _db.Positions.AsNoTracking().AsQueryable();
+
+                // Фильтрация по зарплате
+                if (SalaryFilter.SelectedIndex > 0)
                 {
-                    case 1: currentPositions = currentPositions.Where(p => p.Salary < 50000); break;
-                    case 2: currentPositions = currentPositions.Where(p => p.Salary >= 50000 && p.Salary < 100000); break;
-                    case 3: currentPositions = currentPositions.Where(p => p.Salary >= 100000 && p.Salary < 150000); break;
-                    case 4: currentPositions = currentPositions.Where(p => p.Salary >= 150000); break;
+                    switch (SalaryFilter.SelectedIndex)
+                    {
+                        case 1: currentPositions = currentPositions.Where(p => p.Salary < 50000); break;
+                        case 2: currentPositions = currentPositions.Where(p => p.Salary >= 50000 && p.Salary < 100000); break;
+                        case 3: currentPositions = currentPositions.Where(p => p.Salary >= 100000 && p.Salary < 150000); break;
+                        case 4: currentPositions = currentPositions.Where(p => p.Salary >= 150000); break;
+                    }
                 }
-            }
 
-            // Фильтрация по названию
-            if (!string.IsNullOrWhiteSpace(SearchPositionName.Text))
+                // Фильтрация по названию
+                if (!string.IsNullOrWhiteSpace(SearchPositionName.Text))
+                {
+                    currentPositions = currentPositions.Where(p =>
+                        p.Name.ToLower().Contains(SearchPositionName.Text.ToLower()));
+                }
+
+                // Сортировка
+                switch (SortPositionComboBox.SelectedIndex)
+                {
+                    case 0: currentPositions = currentPositions.OrderBy(p => p.Name); break;
+                    case 1: currentPositions = currentPositions.OrderBy(p => p.Name); break;
+                    case 2: currentPositions = currentPositions.OrderByDescending(p => p.Name); break;
+                    case 3: currentPositions = currentPositions.OrderBy(p => p.Salary); break;
+                    case 4: currentPositions = currentPositions.OrderByDescending(p => p.Salary); break;
+                }
+
+                PositionsDataGrid.ItemsSource = currentPositions.ToList();
+            }
+            catch (Exception ex)
             {
-                currentPositions = currentPositions.Where(p =>
-                    p.Name.ToLower().Contains(SearchPositionName.Text.ToLower()));
+                MessageBox.Show($"Ошибка при обновлении данных: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Сортировка
-            switch (SortPositionComboBox.SelectedIndex)
-            {
-                case 0: currentPositions = currentPositions.OrderBy(p => p.Name); break;
-                case 1: currentPositions = currentPositions.OrderBy(p => p.Name); break;
-                case 2: currentPositions = currentPositions.OrderByDescending(p => p.Name); break;
-                case 3: currentPositions = currentPositions.OrderBy(p => p.Salary); break;
-                case 4: currentPositions = currentPositions.OrderByDescending(p => p.Salary); break;
-            }
-
-            PositionsDataGrid.ItemsSource = currentPositions.ToList();
         }
 
         private void SalaryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -85,8 +113,10 @@ namespace HospitalD
         {
             if (PositionsDataGrid.SelectedItem is Position selectedPosition)
             {
-                NavigationService.Navigate(new AddEditPositionPage(
-                    new Position { ID_Position = selectedPosition.ID_Position }));
+                _shouldRefresh = true;
+                var editPage = new AddEditPositionPage(selectedPosition);
+                editPage.PositionSaved += (s, args) => _shouldRefresh = true;
+                NavigationService.Navigate(editPage);
             }
             else
             {
@@ -97,7 +127,10 @@ namespace HospitalD
 
         private void ButtonAdd_OnClick(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new AddEditPositionPage());
+            _shouldRefresh = true;
+            var addPage = new AddEditPositionPage();
+            addPage.PositionSaved += (s, args) => _shouldRefresh = true;
+            NavigationService.Navigate(addPage);
         }
 
         private void ButtonDel_OnClick(object sender, RoutedEventArgs e)
@@ -117,21 +150,12 @@ namespace HospitalD
 
             try
             {
-                if (_db.Entry(selectedPosition).State == EntityState.Detached)
-                {
-                    _db.Positions.Attach(selectedPosition);
-                }
-
+                _db.Positions.Attach(selectedPosition);
                 _db.Positions.Remove(selectedPosition);
                 _db.SaveChanges();
                 UpdatePositions();
                 MessageBox.Show("Должность успешно удалена!",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (System.Data.Entity.Infrastructure.DbUpdateException)
-            {
-                MessageBox.Show("Невозможно удалить должность, так как она связана с другими записями в базе данных.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {

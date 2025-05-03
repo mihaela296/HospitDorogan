@@ -118,5 +118,6 @@ namespace HospitalD
                 MessageBox.Show($"Ошибка при выходе: {ex.Message}");
             }
         }
+
     }
 }

@@ -8,7 +8,10 @@ namespace HospitalD
 {
     public partial class AddEditDepartmentPage : Page
     {
-        private readonly Department _currentDepartment; // Добавлено readonly
+        // Добавляем событие для уведомления об успешном сохранении
+        public event EventHandler DepartmentSaved;
+
+        private readonly Department _currentDepartment;
         private readonly Entities1 _context = new Entities1();
 
         public AddEditDepartmentPage(Department selectedDepartment = null)
@@ -25,7 +28,9 @@ namespace HospitalD
         {
             if (_currentDepartment == null) return;
 
-            TextBlockTitle.Text = "Редактирование отделения";
+            TextBlockTitle.Text = _currentDepartment.ID_Department == 0
+                ? "Добавление отделения"
+                : "Редактирование отделения";
             TextBoxName.Text = _currentDepartment.Name;
         }
 
@@ -43,6 +48,10 @@ namespace HospitalD
                 }
 
                 _context.SaveChanges();
+
+                // Вызываем событие сохранения
+                DepartmentSaved?.Invoke(this, EventArgs.Empty);
+
                 MessageBox.Show("Данные отделения успешно сохранены!",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 NavigationService.GoBack();

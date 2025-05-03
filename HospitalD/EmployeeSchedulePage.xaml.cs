@@ -86,24 +86,37 @@ namespace HospitalD
             }
         }
 
+        // In EmployeeSchedulePage.xaml.cs - modify the CompleteAppointmentButton_Click method
         private void CompleteAppointmentButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!(ScheduleDataGrid.SelectedItem is PatientMedicalRecord appointment))
+            try
             {
-                MessageBox.Show("Выберите прием для завершения");
-                return;
+                if (!(ScheduleDataGrid.SelectedItem is PatientMedicalRecord selectedAppointment))
+                {
+                    MessageBox.Show("Выберите запись для завершения");
+                    return;
+                }
+
+                // Обновляем запись в базе данных
+                using (var context = new Entities1())
+                {
+                    var appointment = context.PatientMedicalRecords
+                        .FirstOrDefault(a => a.ID_Record == selectedAppointment.ID_Record);
+
+                    if (appointment != null)
+                    {
+                        // Устанавливаем признак завершения
+                        appointment.DischargeDate = DateTime.Now;
+                        context.SaveChanges();
+                    }
+                }
+
+                // Открываем страницу назначения лечения
+                NavigationService?.Navigate(new AssignTreatmentPage(_currentStaff, selectedAppointment));
             }
-
-            using (var tempContext = new Entities1())
+            catch (Exception ex)
             {
-                var freshAppointment = tempContext.PatientMedicalRecords
-                    .Include(a => a.Patient)
-                    .FirstOrDefault(a => a.ID_Record == appointment.ID_Record);
-
-                if (freshAppointment == null) return;
-
-                // Явный вызов конструктора с PatientMedicalRecord
-                NavigationService?.Navigate(new AssignTreatmentPage(_currentStaff, freshAppointment));
+                MessageBox.Show($"Ошибка при завершении приема: {ex.Message}\n\n{ex.InnerException?.Message}");
             }
         }
 
@@ -111,43 +124,53 @@ namespace HospitalD
         {
             try
             {
-                var filterDate = DateFilter.SelectedDate;
-                var selectedDoctorId = (int?)DoctorFilterComboBox.SelectedValue;
+                DateTime? filterDate = DateFilter.SelectedDate;
+                int? doctorId = (int?)DoctorFilterComboBox.SelectedValue;
 
-                IQueryable<PatientMedicalRecord> query = _db.PatientMedicalRecords
+                // Получаем базовый запрос
+                var query = _db.PatientMedicalRecords
                     .Include(r => r.Patient)
-                    .Include(r => r.Staff) // Добавляем загрузку данных о враче
+                    .Include(r => r.Staff)
                     .Include(r => r.Diagnosis)
-                    .Include(r => r.MedicalProcedure);
+                    .Include(r => r.MedicalProcedure)
+                    .AsQueryable();
 
-                // Фильтр по дате
+                // Фильтр по дате (исправленная версия)
                 if (filterDate.HasValue)
                 {
-                    query = query.Where(r => DbFunctions.TruncateTime(r.VisitDate) == filterDate.Value.Date);
+                    DateTime startDate = filterDate.Value.Date;
+                    DateTime endDate = startDate.AddDays(1);
+                    query = query.Where(r => r.VisitDate >= startDate && r.VisitDate < endDate);
                 }
 
                 // Фильтр по врачу
-                if (selectedDoctorId.HasValue)
+                if (doctorId.HasValue)
                 {
-                    query = query.Where(r => r.ID_Staff == selectedDoctorId);
+                    query = query.Where(r => r.ID_Staff == doctorId.Value);
                 }
 
-                // Фильтр по незавершенным записям
-                query = query.Where(r => r.DischargeDate == null || r.DischargeDate > DateTime.Now);
-
-                var filteredSchedule = query
+                // Применяем сортировку и загрузку
+                ScheduleDataGrid.ItemsSource = query
                     .OrderBy(r => r.VisitDate)
                     .ToList();
-
-                ScheduleDataGrid.ItemsSource = filteredSchedule;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка фильтрации: {ex.Message}");
+                MessageBox.Show($"Ошибка фильтрации: {ex.Message}\n\nПопробуйте выбрать другую дату или врача.");
             }
         }
 
-        private void TodayButton_Click(object sender, RoutedEventArgs e) => ApplyFilter_Click(sender, e);
-        private void ResetFilter_Click(object sender, RoutedEventArgs e) => LoadSchedule();
+        private void TodayButton_Click(object sender, RoutedEventArgs e)
+        {
+            DateFilter.SelectedDate = DateTime.Today;
+            ApplyFilter_Click(sender, e);
+        }
+
+        private void ResetFilter_Click(object sender, RoutedEventArgs e)
+        {
+            DateFilter.SelectedDate = null;
+            DoctorFilterComboBox.SelectedItem = null;
+            LoadSchedule();
+        }
     }
 }

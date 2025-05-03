@@ -9,13 +9,33 @@ namespace HospitalD
 {
     public partial class MedicalProceduresPage : Page
     {
-        private readonly Entities1 _db = new Entities1(); // IDE0044: Добавлено readonly
+        private readonly Entities1 _db = new Entities1();
+        private bool _shouldRefresh = false;
 
         public MedicalProceduresPage()
         {
             InitializeComponent();
             LoadMedicalProcedures();
             InitializeDurationFilter();
+
+            // Подписываемся на событие NavigationService
+            this.Loaded += (s, e) =>
+            {
+                if (NavigationService != null)
+                {
+                    NavigationService.Navigated += NavigationService_Navigated;
+                }
+            };
+        }
+
+        private void NavigationService_Navigated(object sender, NavigationEventArgs e)
+        {
+            // Обновляем данные только если вернулись на эту страницу
+            if (e.Content == this && _shouldRefresh)
+            {
+                UpdateProcedures();
+                _shouldRefresh = false;
+            }
         }
 
         private void InitializeDurationFilter()
@@ -44,38 +64,47 @@ namespace HospitalD
 
         private void UpdateProcedures()
         {
-            var currentProcedures = _db.MedicalProcedures
-                .Include(m => m.Staff)
-                .AsQueryable();
-
-            // Фильтрация по продолжительности
-            if (DurationFilter.SelectedIndex > 0 &&
-                DurationFilter.SelectedItem is ComboBoxItem selectedDurationItem)
+            try
             {
-                string selectedDuration = selectedDurationItem.Content.ToString().Replace(" мин", "");
-                currentProcedures = currentProcedures.Where(p => p.Duration == selectedDuration);
-            }
+                var currentProcedures = _db.MedicalProcedures
+                    .Include(m => m.Staff)
+                    .AsNoTracking()
+                    .AsQueryable();
 
-            // Фильтрация по названию
-            if (!string.IsNullOrWhiteSpace(SearchProcedureName.Text))
+                // Фильтрация по продолжительности
+                if (DurationFilter.SelectedIndex > 0 &&
+                    DurationFilter.SelectedItem is ComboBoxItem selectedDurationItem)
+                {
+                    string selectedDuration = selectedDurationItem.Content.ToString().Replace(" мин", "");
+                    currentProcedures = currentProcedures.Where(p => p.Duration == selectedDuration);
+                }
+
+                // Фильтрация по названию
+                if (!string.IsNullOrWhiteSpace(SearchProcedureName.Text))
+                {
+                    currentProcedures = currentProcedures.Where(p =>
+                        p.Name.ToLower().Contains(SearchProcedureName.Text.ToLower()));
+                }
+
+                // Сортировка
+                switch (SortProcedureComboBox.SelectedIndex)
+                {
+                    case 0: currentProcedures = currentProcedures.OrderBy(p => p.ID_Procedure); break;
+                    case 1: currentProcedures = currentProcedures.OrderBy(p => p.Name); break;
+                    case 2: currentProcedures = currentProcedures.OrderByDescending(p => p.Name); break;
+                    case 3: currentProcedures = currentProcedures.OrderBy(p => p.ID_Procedure); break;
+                    case 4: currentProcedures = currentProcedures.OrderByDescending(p => p.ID_Procedure); break;
+                    case 5: currentProcedures = currentProcedures.OrderBy(p => p.Duration); break;
+                    case 6: currentProcedures = currentProcedures.OrderByDescending(p => p.Duration); break;
+                }
+
+                MedicalProceduresDataGrid.ItemsSource = currentProcedures.ToList();
+            }
+            catch (Exception ex)
             {
-                currentProcedures = currentProcedures.Where(p =>
-                    p.Name.ToLower().Contains(SearchProcedureName.Text.ToLower()));
+                MessageBox.Show($"Ошибка при обновлении данных: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-            // Сортировка
-            switch (SortProcedureComboBox.SelectedIndex)
-            {
-                case 0: currentProcedures = currentProcedures.OrderBy(p => p.ID_Procedure); break;
-                case 1: currentProcedures = currentProcedures.OrderBy(p => p.Name); break;
-                case 2: currentProcedures = currentProcedures.OrderByDescending(p => p.Name); break;
-                case 3: currentProcedures = currentProcedures.OrderBy(p => p.ID_Procedure); break;
-                case 4: currentProcedures = currentProcedures.OrderByDescending(p => p.ID_Procedure); break;
-                case 5: currentProcedures = currentProcedures.OrderBy(p => p.Duration); break;
-                case 6: currentProcedures = currentProcedures.OrderByDescending(p => p.Duration); break;
-            }
-
-            MedicalProceduresDataGrid.ItemsSource = currentProcedures.ToList();
         }
 
         private void DurationFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -105,7 +134,10 @@ namespace HospitalD
         {
             if (MedicalProceduresDataGrid.SelectedItem is MedicalProcedure selectedProcedure)
             {
-                NavigationService.Navigate(new AddEditMedicalProcedurePage(selectedProcedure));
+                _shouldRefresh = true;
+                var editPage = new AddEditMedicalProcedurePage(selectedProcedure);
+                editPage.ProcedureSaved += (s, args) => _shouldRefresh = true;
+                NavigationService.Navigate(editPage);
             }
             else
             {
@@ -116,12 +148,14 @@ namespace HospitalD
 
         private void ButtonAdd_OnClick(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new AddEditMedicalProcedurePage());
+            _shouldRefresh = true;
+            var addPage = new AddEditMedicalProcedurePage();
+            addPage.ProcedureSaved += (s, args) => _shouldRefresh = true;
+            NavigationService.Navigate(addPage);
         }
 
         private void ButtonDel_OnClick(object sender, RoutedEventArgs e)
         {
-            // Исправлено с использованием сопоставления шаблонов (IDE0019)
             if (!(MedicalProceduresDataGrid.SelectedItem is MedicalProcedure selectedProcedure))
             {
                 MessageBox.Show("Выберите процедуру для удаления!",
@@ -137,21 +171,12 @@ namespace HospitalD
 
             try
             {
-                if (_db.Entry(selectedProcedure).State == EntityState.Detached)
-                {
-                    _db.MedicalProcedures.Attach(selectedProcedure);
-                }
-
+                _db.MedicalProcedures.Attach(selectedProcedure);
                 _db.MedicalProcedures.Remove(selectedProcedure);
                 _db.SaveChanges();
                 UpdateProcedures();
                 MessageBox.Show("Процедура успешно удалена!",
                     "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (System.Data.Entity.Infrastructure.DbUpdateException)
-            {
-                MessageBox.Show("Невозможно удалить процедуру, так как она связана с другими записями в базе данных.",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
