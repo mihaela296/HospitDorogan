@@ -218,7 +218,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AssignTreatmentPage.xaml.cs">
+    <Compile Include="страница сотрудника\AssignTreatmentPage.xaml.cs">
       <DependentUpon>AssignTreatmentPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Department.cs">
@@ -227,19 +227,19 @@
     <Compile Include="Diagnosis.cs">
       <DependentUpon>Model.tt</DependentUpon>
     </Compile>
-    <Compile Include="EditMedicalRecordPage.xaml.cs">
+    <Compile Include="страница сотрудника\EditMedicalRecordPage.xaml.cs">
       <DependentUpon>EditMedicalRecordPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmployeeMedicalRecordsPage.xaml.cs">
+    <Compile Include="страница сотрудника\EmployeeMedicalRecordsPage.xaml.cs">
       <DependentUpon>EmployeeMedicalRecordsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmployeePage.xaml.cs">
+    <Compile Include="страница сотрудника\EmployeePage.xaml.cs">
       <DependentUpon>EmployeePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EmployeeSchedulePage.xaml.cs">
+    <Compile Include="страница сотрудника\EmployeeSchedulePage.xaml.cs">
       <DependentUpon>EmployeeSchedulePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PatientsListPage.xaml.cs">
+    <Compile Include="страница сотрудника\PatientsListPage.xaml.cs">
       <DependentUpon>PatientsListPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="страница пациента\MakeAppointmentPage.xaml.cs">
@@ -350,27 +350,27 @@
     <Compile Include="Страницы админа\StaffPage.xaml.cs">
       <DependentUpon>StaffPage.xaml</DependentUpon>
     </Compile>
-    <Page Include="AssignTreatmentPage.xaml">
+    <Page Include="страница сотрудника\AssignTreatmentPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EditMedicalRecordPage.xaml">
+    <Page Include="страница сотрудника\EditMedicalRecordPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmployeeMedicalRecordsPage.xaml">
+    <Page Include="страница сотрудника\EmployeeMedicalRecordsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmployeePage.xaml">
+    <Page Include="страница сотрудника\EmployeePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EmployeeSchedulePage.xaml">
+    <Page Include="страница сотрудника\EmployeeSchedulePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PatientsListPage.xaml">
+    <Page Include="страница сотрудника\PatientsListPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
